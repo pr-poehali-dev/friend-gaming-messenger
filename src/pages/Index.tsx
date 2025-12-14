@@ -137,10 +137,25 @@ const Index = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex">
-      <aside className="w-20 bg-sidebar border-r border-sidebar-border flex flex-col items-center py-6 space-y-6">
-        <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center glow">
-          <Icon name="Gamepad2" size={28} className="text-primary-foreground" />
+    <div className="min-h-screen bg-background text-foreground flex relative overflow-hidden">
+      <div 
+        className="fixed inset-0 z-0 opacity-30"
+        style={{
+          backgroundImage: 'url(https://cdn.poehali.dev/projects/48405a30-68ec-4aa0-b2f2-af87755d32ae/files/bf46727c-4e04-469b-8c59-5b46ed7a1a9d.jpg)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+        }}
+      />
+      <div className="fixed inset-0 z-0 bg-gradient-to-br from-background via-background/95 to-primary/10" />
+      
+      <aside className="w-20 bg-sidebar/80 backdrop-blur-xl border-r border-sidebar-border flex flex-col items-center py-6 space-y-6 relative z-10">
+        <div className="w-12 h-12 rounded-xl overflow-hidden glow">
+          <img 
+            src="https://cdn.poehali.dev/projects/48405a30-68ec-4aa0-b2f2-af87755d32ae/files/aa0c5df8-cbac-48e6-a2f3-a71bd9e09601.jpg" 
+            alt="Logo" 
+            className="w-full h-full object-cover"
+          />
         </div>
 
         <nav className="flex-1 flex flex-col space-y-4">
@@ -186,7 +201,7 @@ const Index = () => {
         </Button>
       </aside>
 
-      <main className="flex-1 flex">
+      <main className="flex-1 flex relative z-10">
         {activeSection === 'streams' && (
           <div className="flex-1 p-6">
             <div className="mb-6">
@@ -272,7 +287,7 @@ const Index = () => {
 
         {activeSection === 'chats' && (
           <>
-            <div className="w-80 border-r border-border bg-card">
+            <div className="w-80 border-r border-border bg-card/80 backdrop-blur-xl">
               <div className="p-4 border-b border-border">
                 <div className="flex items-center justify-between mb-3">
                   <h2 className="text-2xl font-bold">Чаты</h2>
@@ -376,8 +391,8 @@ const Index = () => {
               </ScrollArea>
             </div>
 
-            <div className="flex-1 flex flex-col">
-              <div className="p-4 border-b border-border bg-card">
+            <div className="flex-1 flex flex-col bg-card/40 backdrop-blur-sm">
+              <div className="p-4 border-b border-border bg-card/80 backdrop-blur-xl">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <Avatar className="w-10 h-10">
@@ -495,7 +510,7 @@ const Index = () => {
                 </div>
               </ScrollArea>
 
-              <div className="p-4 border-t border-border bg-card">
+              <div className="p-4 border-t border-border bg-card/80 backdrop-blur-xl">
                 <div className="flex gap-2">
                   <Input placeholder="Написать сообщение..." className="flex-1" />
                   <Button size="icon" className="glow">
