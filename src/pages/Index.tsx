@@ -5,6 +5,9 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Icon from '@/components/ui/icon';
 
 type Section = 'streams' | 'chats' | 'friends' | 'profile';
@@ -35,9 +38,28 @@ interface Message {
   avatar: string;
 }
 
+interface Chat {
+  id: number;
+  name: string;
+  lastMessage: string;
+  unread: number;
+  avatar: string;
+  type: 'direct' | 'group' | 'channel';
+  members?: number;
+}
+
 const Index = () => {
   const [activeSection, setActiveSection] = useState<Section>('streams');
   const [selectedChat, setSelectedChat] = useState<number | null>(1);
+  const [chats, setChats] = useState<Chat[]>([
+    { id: 1, name: 'Команда CS', lastMessage: 'Го в игру?', unread: 3, avatar: '/placeholder.svg', type: 'group', members: 5 },
+    { id: 2, name: 'Alex', lastMessage: 'Смотрю стрим', unread: 0, avatar: '/placeholder.svg', type: 'direct' },
+    { id: 3, name: 'Raid Party', lastMessage: 'Все готовы?', unread: 7, avatar: '/placeholder.svg', type: 'group', members: 8 },
+    { id: 4, name: 'Новости CS2', lastMessage: 'Новый патч уже скоро!', unread: 0, avatar: '/placeholder.svg', type: 'channel', members: 234 },
+  ]);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [newChatName, setNewChatName] = useState('');
+  const [newChatType, setNewChatType] = useState<'group' | 'channel'>('group');
 
   const streams: Stream[] = [
     {
@@ -86,11 +108,23 @@ const Index = () => {
     { id: 5, name: 'Sergey', status: 'playing', game: 'Dota 2', avatar: '/placeholder.svg' },
   ];
 
-  const chats = [
-    { id: 1, name: 'Команда CS', lastMessage: 'Го в игру?', unread: 3, avatar: '/placeholder.svg' },
-    { id: 2, name: 'Alex', lastMessage: 'Смотрю стрим', unread: 0, avatar: '/placeholder.svg' },
-    { id: 3, name: 'Raid Party', lastMessage: 'Все готовы?', unread: 7, avatar: '/placeholder.svg' },
-  ];
+  const handleCreateChat = () => {
+    if (newChatName.trim()) {
+      const newChat: Chat = {
+        id: chats.length + 1,
+        name: newChatName,
+        lastMessage: newChatType === 'channel' ? 'Канал создан' : 'Группа создана',
+        unread: 0,
+        avatar: '/placeholder.svg',
+        type: newChatType,
+        members: 1,
+      };
+      setChats([newChat, ...chats]);
+      setNewChatName('');
+      setIsCreateDialogOpen(false);
+      setSelectedChat(newChat.id);
+    }
+  };
 
   const messages: Message[] = [
     { id: 1, user: 'Alex', message: 'Привет! Го катку?', time: '14:32', avatar: '/placeholder.svg' },
@@ -197,7 +231,60 @@ const Index = () => {
           <>
             <div className="w-80 border-r border-border bg-card">
               <div className="p-4 border-b border-border">
-                <h2 className="text-2xl font-bold mb-3">Чаты</h2>
+                <div className="flex items-center justify-between mb-3">
+                  <h2 className="text-2xl font-bold">Чаты</h2>
+                  <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button size="icon" variant="ghost" className="h-8 w-8">
+                        <Icon name="Plus" size={20} />
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-md">
+                      <DialogHeader>
+                        <DialogTitle>Создать канал или группу</DialogTitle>
+                      </DialogHeader>
+                      <div className="space-y-4 py-4">
+                        <Tabs value={newChatType} onValueChange={(v) => setNewChatType(v as 'group' | 'channel')}>
+                          <TabsList className="grid w-full grid-cols-2">
+                            <TabsTrigger value="group">
+                              <Icon name="Users" size={16} className="mr-2" />
+                              Группа
+                            </TabsTrigger>
+                            <TabsTrigger value="channel">
+                              <Icon name="Radio" size={16} className="mr-2" />
+                              Канал
+                            </TabsTrigger>
+                          </TabsList>
+                          <TabsContent value="group" className="mt-4">
+                            <p className="text-sm text-muted-foreground mb-3">
+                              Группа для общения с несколькими друзьями одновременно
+                            </p>
+                          </TabsContent>
+                          <TabsContent value="channel" className="mt-4">
+                            <p className="text-sm text-muted-foreground mb-3">
+                              Канал для трансляции сообщений большой аудитории
+                            </p>
+                          </TabsContent>
+                        </Tabs>
+                        <div className="space-y-2">
+                          <Label htmlFor="chat-name">
+                            {newChatType === 'group' ? 'Название группы' : 'Название канала'}
+                          </Label>
+                          <Input
+                            id="chat-name"
+                            placeholder={newChatType === 'group' ? 'Моя команда' : 'Игровые новости'}
+                            value={newChatName}
+                            onChange={(e) => setNewChatName(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && handleCreateChat()}
+                          />
+                        </div>
+                        <Button onClick={handleCreateChat} className="w-full">
+                          Создать {newChatType === 'group' ? 'группу' : 'канал'}
+                        </Button>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                </div>
                 <Input placeholder="Поиск..." className="bg-background" />
               </div>
 
@@ -210,13 +297,30 @@ const Index = () => {
                       className="w-full justify-start mb-1 h-auto py-3 px-3"
                       onClick={() => setSelectedChat(chat.id)}
                     >
-                      <Avatar className="w-10 h-10 mr-3">
-                        <AvatarImage src={chat.avatar} />
-                        <AvatarFallback>{chat.name[0]}</AvatarFallback>
-                      </Avatar>
+                      <div className="relative mr-3">
+                        <Avatar className="w-10 h-10">
+                          <AvatarImage src={chat.avatar} />
+                          <AvatarFallback>{chat.name[0]}</AvatarFallback>
+                        </Avatar>
+                        {chat.type === 'channel' && (
+                          <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-accent rounded-full flex items-center justify-center border-2 border-card">
+                            <Icon name="Radio" size={10} />
+                          </div>
+                        )}
+                        {chat.type === 'group' && (
+                          <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-primary rounded-full flex items-center justify-center border-2 border-card">
+                            <Icon name="Users" size={10} />
+                          </div>
+                        )}
+                      </div>
                       <div className="flex-1 text-left">
                         <div className="flex items-center justify-between">
-                          <p className="font-semibold">{chat.name}</p>
+                          <div className="flex items-center gap-2">
+                            <p className="font-semibold">{chat.name}</p>
+                            {chat.members && chat.members > 1 && (
+                              <span className="text-xs text-muted-foreground">({chat.members})</span>
+                            )}
+                          </div>
                           {chat.unread > 0 && (
                             <Badge className="bg-primary text-primary-foreground">{chat.unread}</Badge>
                           )}
