@@ -60,6 +60,10 @@ const Index = () => {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [newChatName, setNewChatName] = useState('');
   const [newChatType, setNewChatType] = useState<'group' | 'channel'>('group');
+  const [isCallActive, setIsCallActive] = useState(false);
+  const [callDuration, setCallDuration] = useState(0);
+  const [isDonateDialogOpen, setIsDonateDialogOpen] = useState(false);
+  const [donateAmount, setDonateAmount] = useState('');
 
   const streams: Stream[] = [
     {
@@ -219,6 +223,45 @@ const Index = () => {
                         </h3>
                         <p className="text-sm text-muted-foreground">{stream.game}</p>
                       </div>
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button size="sm" variant="ghost" className="text-accent hover:text-accent">
+                            <Icon name="DollarSign" size={18} />
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-md">
+                          <DialogHeader>
+                            <DialogTitle>Поддержать {stream.streamer}</DialogTitle>
+                          </DialogHeader>
+                          <div className="space-y-4 py-4">
+                            <div className="flex items-center gap-3 p-3 bg-muted rounded-lg">
+                              <Avatar className="w-12 h-12">
+                                <AvatarImage src={stream.avatar} />
+                                <AvatarFallback>{stream.streamer[0]}</AvatarFallback>
+                              </Avatar>
+                              <div>
+                                <p className="font-semibold">{stream.streamer}</p>
+                                <p className="text-sm text-muted-foreground">{stream.game}</p>
+                              </div>
+                            </div>
+                            <div className="space-y-2">
+                              <Label>Выберите сумму</Label>
+                              <div className="grid grid-cols-3 gap-2">
+                                {['50', '100', '500'].map((amount) => (
+                                  <Button key={amount} variant="outline">
+                                    {amount} ₽
+                                  </Button>
+                                ))}
+                              </div>
+                            </div>
+                            <Input type="number" placeholder="Или укажите свою сумму" />
+                            <Button className="w-full bg-accent hover:bg-accent/90">
+                              <Icon name="Heart" size={18} className="mr-2" />
+                              Отправить донат
+                            </Button>
+                          </div>
+                        </DialogContent>
+                      </Dialog>
                     </div>
                   </div>
                 </Card>
@@ -335,17 +378,91 @@ const Index = () => {
 
             <div className="flex-1 flex flex-col">
               <div className="p-4 border-b border-border bg-card">
-                <div className="flex items-center gap-3">
-                  <Avatar className="w-10 h-10">
-                    <AvatarImage src="/placeholder.svg" />
-                    <AvatarFallback>A</AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <h3 className="font-bold">Alex</h3>
-                    <p className="text-sm text-secondary flex items-center">
-                      <Icon name="Circle" size={8} className="mr-1 fill-current" />
-                      Онлайн
-                    </p>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Avatar className="w-10 h-10">
+                      <AvatarImage src="/placeholder.svg" />
+                      <AvatarFallback>A</AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <h3 className="font-bold">Alex</h3>
+                      <p className="text-sm text-secondary flex items-center">
+                        <Icon name="Circle" size={8} className="mr-1 fill-current" />
+                        {isCallActive ? `В звонке ${Math.floor(callDuration / 60)}:${String(callDuration % 60).padStart(2, '0')}` : 'Онлайн'}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Dialog open={isDonateDialogOpen} onOpenChange={setIsDonateDialogOpen}>
+                      <DialogTrigger asChild>
+                        <Button size="icon" variant="ghost" className="h-9 w-9">
+                          <Icon name="DollarSign" size={20} className="text-accent" />
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="sm:max-w-md">
+                        <DialogHeader>
+                          <DialogTitle>Поддержать донатом</DialogTitle>
+                        </DialogHeader>
+                        <div className="space-y-4 py-4">
+                          <div className="space-y-2">
+                            <Label>Выберите сумму</Label>
+                            <div className="grid grid-cols-3 gap-2">
+                              {['50', '100', '500'].map((amount) => (
+                                <Button
+                                  key={amount}
+                                  variant={donateAmount === amount ? 'default' : 'outline'}
+                                  onClick={() => setDonateAmount(amount)}
+                                >
+                                  {amount} ₽
+                                </Button>
+                              ))}
+                            </div>
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="custom-amount">Или укажите свою сумму</Label>
+                            <Input
+                              id="custom-amount"
+                              type="number"
+                              placeholder="Сумма в рублях"
+                              value={donateAmount}
+                              onChange={(e) => setDonateAmount(e.target.value)}
+                            />
+                          </div>
+                          <div className="bg-muted p-4 rounded-lg">
+                            <p className="text-sm text-muted-foreground mb-2">Донат пойдёт на:</p>
+                            <div className="flex items-center gap-2 text-sm">
+                              <Icon name="Heart" size={16} className="text-destructive" />
+                              <span>Поддержку стримера Alex</span>
+                            </div>
+                          </div>
+                          <Button className="w-full bg-accent hover:bg-accent/90" disabled={!donateAmount}>
+                            <Icon name="CreditCard" size={18} className="mr-2" />
+                            Отправить донат {donateAmount && `${donateAmount} ₽`}
+                          </Button>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                    <Button
+                      size="icon"
+                      variant={isCallActive ? 'destructive' : 'default'}
+                      className="h-9 w-9"
+                      onClick={() => {
+                        if (isCallActive) {
+                          setIsCallActive(false);
+                          setCallDuration(0);
+                        } else {
+                          setIsCallActive(true);
+                          const interval = setInterval(() => {
+                            setCallDuration((prev) => prev + 1);
+                          }, 1000);
+                          setTimeout(() => {
+                            clearInterval(interval);
+                          }, 3600000);
+                        }
+                      }}
+                    >
+                      <Icon name={isCallActive ? 'PhoneOff' : 'Phone'} size={18} />
+                    </Button>
                   </div>
                 </div>
               </div>
@@ -428,9 +545,14 @@ const Index = () => {
                           : 'Не в сети'}
                       </p>
                     </div>
-                    <Button size="icon" variant="ghost">
-                      <Icon name="MessageCircle" size={20} />
-                    </Button>
+<div className="flex gap-1">
+                      <Button size="icon" variant="ghost">
+                        <Icon name="MessageCircle" size={20} />
+                      </Button>
+                      <Button size="icon" variant="ghost" className="text-secondary">
+                        <Icon name="Phone" size={20} />
+                      </Button>
+                    </div>
                   </div>
                 </Card>
               ))}
